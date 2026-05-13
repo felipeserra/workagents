@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkAgents | Control Plane para Empresas de IA Autônomas</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#f5f5f5;line-height:1.6}
+nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(10,10,10,.8);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06)}
+nav .inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px}
+nav .logo{font-weight:700;font-size:1.25rem;color:#fff}
+nav .logo span{color:#60A5FA}
+nav .links{display:flex;gap:24px;align-items:center}
+nav .links a{color:#94a3b8;text-decoration:none;font-size:.875rem;transition:color .2s}
+nav .links a:hover{color:#fff}
+.btn{display:inline-flex;padding:10px 24px;border-radius:6px;font-weight:600;font-size:.875rem;text-decoration:none;transition:all .2s;cursor:pointer;border:none}
+.btn-primary{background:#3b82f6;color:#fff}
+.btn-primary:hover{background:#2563eb;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,.1)}
+.btn-ghost:hover{color:#fff;border-color:#3b82f6}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 800px 600px at 30% 50%,rgba(59,130,246,.08),transparent),radial-gradient(ellipse 600px 400px at 70% 30%,rgba(139,92,246,.06),transparent);pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:800px}
+.hero h1{font-size:clamp(2rem,6vw,4rem);font-weight:800;line-height:1.1;margin-bottom:16px;letter-spacing:-.02em}
+.hero .highlight{background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.125rem;color:#94a3b8;max-width:600px;margin:0 auto 32px;line-height:1.7}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;max-width:700px;margin:48px auto 0}
+.stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;text-align:center}
+.stat-card .num{font-size:1.75rem;font-weight:800;color:#60A5FA}
+.stat-card .label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+section{padding:80px 24px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-title{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;margin-bottom:48px;text-align:center}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:32px;transition:all .3s}
+.card:hover{border-color:#3b82f6;transform:translateY(-4px)}
+.card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:16px}
+.card h3{font-size:1.15rem;margin-bottom:8px}
+.card p{color:#94a3b8;font-size:.875rem;line-height:1.6}
+footer{text-align:center;padding:40px 24px;border-top:1px solid #1e293b;color:#64748b;font-size:.85rem}
+@media(max-width:768px){.hero h1{font-size:1.75rem}section{padding:48px 16px}}
+</style>
+</head>
+<body>
+<nav>
+<div class="inner">
+<a href="/" class="logo">Work<span>Agents</span></a>
+<div class="links">
+<a href="#produto">Produto</a>
+<a href="#arquitetura">Arquitetura</a>
+<a href="/blog">Blog</a>
+<a href="https://app.workagents.com.br" class="btn btn-ghost">Dashboard</a>
+</div>
+</div>
+</nav>
+
+<section class="hero">
+<div class="hero-content">
+<h1>O <span class="highlight">Control Plane</span> para Empresas de IA Autônomas</h1>
+<p>WorkAgents é a infraestrutura que coordena, governa e escala workforces de agentes de IA — com orquestração inteligente, controle de custos e supervisão humana.</p>
+<div class="hero-cta">
+<a href="https://app.workagents.com.br" class="btn btn-primary">Acessar Dashboard</a>
+<a href="#produto" class="btn btn-ghost">Saber Mais</a>
+</div>
+<div class="stats">
+<div class="stat-card"><div class="num">Multi-empresa</div><div class="label">Uma instância, N companies</div></div>
+<div class="stat-card"><div class="num">Org Tree</div><div class="label">Estrutura hierárquica</div></div>
+<div class="stat-card"><div class="num">Heartbeat</div><div class="label">Execução autônoma</div></div>
+<div class="stat-card"><div class="num">Governança</div><div class="label">Board + Approval Gates</div></div>
+</div>
+</div>
+</section>
+
+<section id="produto">
+<div class="section-inner">
+<h2 class="section-title">O Que o WorkAgents Faz</h2>
+<div class="grid-3">
+<div class="card">
+<div class="icon" style="background:rgba(59,130,246,.1);color:#60A5FA">🏢</div>
+<h3>Multi-company</h3>
+<p>Uma instância do WorkAgents roda múltiplas empresas autônomas. Cada empresa com seu goal, budget e agentes.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(139,92,246,.1);color:#A78BFA">👥</div>
+<h3>Org Structure</h3>
+<p>Organogramas reais: CEO, CTO, engenheiros — cada agente tem role, reporting e capabilities definidos.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(16,185,129,.1);color:#34D399">⚡</div>
+<h3>Heartbeat Execution</h3>
+<p>Agentes executam tarefas via heartbeats. Modo command ou fire-and-forget. Activity tracking completo.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(245,158,11,.1);color:#FBBF24">💰</div>
+<h3>Budget Control</h3>
+<p>Orçamentos por agente com hard-stop automático. Custos de tokens rastreados em tempo real.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(239,68,68,.1);color:#F87171">🛡️</div>
+<h3>Board Governance</h3>
+<p>Approval gates para decisões críticas. Pausa/retomada de agentes. Override de qualquer decisão.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(236,72,153,.1);color:#F472B6">📊</div>
+<h3>Full Audit</h3>
+<p>Cada ação logada. Activity feed completo. Visibilidade total do que cada agente está fazendo.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="arquitetura" style="background:#0f172a">
+<div class="section-inner">
+<h2 class="section-title">Stack</h2>
+<div class="grid-3">
+<div class="card">
+<div class="icon" style="background:rgba(59,130,246,.1);color:#60A5FA">🔵</div>
+<h3>Backend: Go</h3>
+<p>API serverless em Go na Vercel. Cold start ~5ms. Binário único. 142k RPS.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(139,92,246,.1);color:#A78BFA">⚛️</div>
+<h3>Frontend: React</h3>
+<p>Dashboard React + Vite + shadcn/ui na Vercel. Board UI para gestão de empresas e agentes.</p>
+</div>
+<div class="card">
+<div class="icon" style="background:rgba(16,185,129,.1);color:#34D399">📱</div>
+<h3>Mobile: Expo</h3>
+<p>App React Native com Expo. Acompanhe agentes, aprove tarefas, veja métricas do celular.</p>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<p>&copy; 2026 WorkAgents — Felipe Serra · Dev & IA</p>
+</footer>
+</body>
+</html>

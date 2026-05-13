@@ -1,0 +1,24 @@
+name: Deploy Backend
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/backend/**'
+      - '!**.md'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Build
+        run: cd apps/backend && go build ./...
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          cd apps/backend
+          npx vercel deploy --yes --token="$VERCEL_TOKEN" --prod

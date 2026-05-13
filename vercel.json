@@ -1,0 +1,17 @@
+{
+  "name": "workagents",
+  "buildCommand": null,
+  "installCommand": null,
+  "framework": null,
+  "outputDirectory": null,
+  "functions": {
+    "apps/backend/api/**/*.go": {
+      "runtime": "go@1.23",
+      "maxDuration": 30,
+      "memory": 512
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/apps/backend/api/$1" }
+  ]
+}

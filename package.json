@@ -1,0 +1,24 @@
+{
+  "name": "workagents",
+  "private": true,
+  "version": "0.1.0",
+  "description": "WorkAgents — Control plane for autonomous AI companies",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,go,md,json}\"",
+    "db:generate": "pnpm -F @workagents/db db:generate",
+    "db:migrate": "pnpm -F @workagents/db db:migrate",
+    "landing:dev": "pnpm -F @workagents/landing dev",
+    "frontend:dev": "pnpm -F @workagents/frontend dev",
+    "backend:dev": "pnpm -F @workagents/backend dev",
+    "mobile:start": "pnpm -F @workagents/mobile start"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
