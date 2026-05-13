@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type ApprovalRequest struct {
@@ -81,7 +81,7 @@ func ListApprovals(w http.ResponseWriter, r *http.Request) {
 
 func ApproveApproval(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	db.DB.Exec("UPDATE approval_requests SET status='approved', reviewed_by=?, reviewed_at=? WHERE id=? AND status='pending'", boardID, now, id)
@@ -92,7 +92,7 @@ func ApproveApproval(w http.ResponseWriter, r *http.Request) {
 
 func RejectApproval(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	db.DB.Exec("UPDATE approval_requests SET status='rejected', reviewed_by=?, reviewed_at=? WHERE id=? AND status='pending'", boardID, now, id)

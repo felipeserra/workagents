@@ -16,3 +16,4 @@ packages/*/dist
 apps/mobile/.expo/
 apps/mobile/ios/
 apps/mobile/android/
+.vercel

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 // logActivity registra uma ação no activity log

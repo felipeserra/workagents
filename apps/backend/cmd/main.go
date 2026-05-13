@@ -10,9 +10,8 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"workagents/apps/backend/internal/db"
-	"workagents/apps/backend/internal/handler"
-	"workagents/apps/backend/internal/middleware"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/handler"
 )
 
 func main() {
@@ -53,7 +52,7 @@ func main() {
 
 		// ── Protected routes (Board JWT) ──
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.JWTAuth)
+			r.Use(handler.JWTAuth)
 
 			// Companies
 			r.Get("/companies", handler.ListCompanies)

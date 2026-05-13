@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type Heartbeat struct {
@@ -57,10 +57,7 @@ func TriggerHeartbeat(w http.ResponseWriter, r *http.Request) {
 
 func ListHeartbeats(w http.ResponseWriter, r *http.Request) {
 	agentID := r.URL.Query().Get("agent_id")
-	limit := r.URL.Query().Get("limit")
-	if limit == "" {
-		limit = "20"
-	}
+	limit := parseLimit(r, 20, 500)
 
 	query := "SELECT id, agent_id, status, mode, context_sent, result, started_at, completed_at, logs FROM heartbeats"
 	args := []any{}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type Task struct {
@@ -116,7 +116,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
 	var req CreateTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -149,7 +149,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, "invalid body")
 		return
 	}
-	db.DB.Exec("UPDATE tasks SET title=?, description=?, priority=?, agent_id=?, updated_at=datetime('now') WHERE id=?", req.Title, req.Description, req.Priority, req.AgentID, id)
+	db.DB.Exec("UPDATE tasks SET title=?, description=?, priority=?, agent_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", req.Title, req.Description, req.Priority, req.AgentID, id)
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
@@ -162,7 +162,8 @@ func CheckoutTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Atomic checkout: only if status is 'backlog' or 'available'
-	result, err := db.DB.Exec("UPDATE tasks SET status='in_progress', agent_id=?, updated_at=datetime('now') WHERE id=? AND status IN ('backlog','available')", agentID, id)
+	now := time.Now().UTC().Format(time.RFC3339)
+	result, err := db.DB.Exec("UPDATE tasks SET status='in_progress', agent_id=?, updated_at=? WHERE id=? AND status IN ('backlog','available')", agentID, now, id)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "checkout failed")
 		return
@@ -178,7 +179,7 @@ func CheckoutTask(w http.ResponseWriter, r *http.Request) {
 
 func CompleteTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	_, err := db.DB.Exec("UPDATE tasks SET status='completed', completed_at=datetime('now'), updated_at=datetime('now') WHERE id=?", id)
+	now := time.Now().UTC().Format(time.RFC3339); _, err := db.DB.Exec("UPDATE tasks SET status='completed', completed_at=?, updated_at=? WHERE id=?", now, now, id)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "failed to complete")
 		return
@@ -188,7 +189,7 @@ func CompleteTask(w http.ResponseWriter, r *http.Request) {
 
 func AddComment(w http.ResponseWriter, r *http.Request) {
 	taskID := chi.URLParam(r, "id")
-	agentID := r.Context().Value("user_id").(string)
+	agentID := getUserIDSafe(r)
 
 	var body struct {
 		Content string `json:"content"`

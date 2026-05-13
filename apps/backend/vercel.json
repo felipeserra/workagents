@@ -1,0 +1,14 @@
+{
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": null,
+  "functions": {
+    "api/index.go": {
+      "maxDuration": 30,
+      "memory": 512
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ]
+}

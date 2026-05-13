@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type Budget struct {
@@ -117,7 +117,9 @@ func UpdateBudget(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, "invalid body")
 		return
 	}
-	db.DB.Exec("UPDATE budgets SET limit_tokens=?, limit_dollars=?, updated_at=datetime('now') WHERE id=?", req.LimitTokens, req.LimitDollars, id)
+	now := time.Now().UTC().Format(time.RFC3339)
+	db.DB.Exec("UPDATE budgets SET limit_tokens=?, limit_dollars=?, updated_at=? WHERE id=?",
+		req.LimitTokens, req.LimitDollars, now, id)
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
@@ -131,10 +133,12 @@ func OverrideBudget(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, "invalid body")
 		return
 	}
-	db.DB.Exec("UPDATE budgets SET limit_tokens=?, limit_dollars=?, updated_at=datetime('now') WHERE id=?", req.LimitTokens, req.LimitDollars, id)
+	now := time.Now().UTC().Format(time.RFC3339)
+	db.DB.Exec("UPDATE budgets SET limit_tokens=?, limit_dollars=?, updated_at=? WHERE id=?",
+		req.LimitTokens, req.LimitDollars, now, id)
 
 	// Log board override
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 	logActivity("", boardID, "budget.override", "budget", id, nil)
 
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "overridden"})

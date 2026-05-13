@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 // ── Types ──
@@ -86,7 +86,7 @@ func GetCompany(w http.ResponseWriter, r *http.Request) {
 
 // CreateCompany cria uma nova empresa
 func CreateCompany(w http.ResponseWriter, r *http.Request) {
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
 	var req CreateCompanyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -94,8 +94,17 @@ func CreateCompany(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Name = sanitizeText(req.Name)
+	req.Goal = sanitizeText(req.Goal)
+
 	if req.Name == "" {
 		jsonError(w, http.StatusBadRequest, "name is required")
+		return
+	}
+
+	// Validate name length
+	if len(req.Name) > 255 {
+		jsonError(w, http.StatusBadRequest, "name too long (max 255)")
 		return
 	}
 
@@ -110,6 +119,12 @@ func CreateCompany(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusInternalServerError, "failed to create company")
 		return
 	}
+
+	// Add creator as company member (owner)
+	_, _ = db.DB.Exec(
+		"INSERT INTO company_members (user_id, company_id, role) VALUES (?, ?, ?)",
+		boardID, id, "owner",
+	)
 
 	// Activity log
 	logActivity(id, boardID, "company.created", "company", id, map[string]string{"name": req.Name})
@@ -127,13 +142,16 @@ func CreateCompany(w http.ResponseWriter, r *http.Request) {
 // UpdateCompany atualiza dados da empresa
 func UpdateCompany(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
 	var req CreateCompanyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, "invalid body")
 		return
 	}
+
+	req.Name = sanitizeText(req.Name)
+	req.Goal = sanitizeText(req.Goal)
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
@@ -160,9 +178,10 @@ func UpdateCompany(w http.ResponseWriter, r *http.Request) {
 // DeleteCompany soft-delete uma empresa
 func DeleteCompany(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
-	result, err := db.DB.Exec("UPDATE companies SET active = 0, updated_at = datetime('now') WHERE id = ?", id)
+	now := time.Now().UTC().Format(time.RFC3339)
+	result, err := db.DB.Exec("UPDATE companies SET active = 0, updated_at = ? WHERE id = ?", now, id)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "failed to delete")
 		return

@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type ActivityEntry struct {
@@ -21,11 +20,7 @@ type ActivityEntry struct {
 // ListActivity retorna feed de atividades
 func ListActivity(w http.ResponseWriter, r *http.Request) {
 	companyID := r.URL.Query().Get("company_id")
-	limit := r.URL.Query().Get("limit")
-
-	if limit == "" {
-		limit = "50"
-	}
+	limit := parseLimit(r, 50, 500)
 
 	query := `SELECT id, company_id, actor_id, action, target_type, target_id, metadata, created_at
 		FROM activity_logs`
@@ -44,7 +39,11 @@ func ListActivity(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusInternalServerError, "database error")
 		return
 	}
-	defer rows.Close()
+	if rows != nil {
+		defer rows.Close()
+	} else {
+		defer func() {}()
+	}
 
 	entries := []ActivityEntry{}
 	for rows.Next() {

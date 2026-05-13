@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"workagents/apps/backend/internal/db"
+	"github.com/felipeserra/workagents/apps/backend/lib/db"
 )
 
 type Agent struct {
@@ -36,6 +36,7 @@ type CreateAgentRequest struct {
 	AdapterConfig string  `json:"adapter_config"`
 	ReportsTo     *string `json:"reports_to"`
 	Capabilities  string  `json:"capabilities"`
+	ContextMode   string  `json:"context_mode"`
 }
 
 func ListAgents(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +95,7 @@ func GetAgent(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateAgent(w http.ResponseWriter, r *http.Request) {
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
 	var req CreateAgentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -105,11 +106,23 @@ func CreateAgent(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, "name and role required")
 		return
 	}
+
+	// Input sanitization
+	req.Name = sanitizeText(req.Name)
+	req.Role = sanitizeText(req.Role)
+
 	if req.AdapterType == "" {
 		req.AdapterType = "process"
 	}
+
+	// Validate adapter_config is valid JSON
 	if req.AdapterConfig == "" {
 		req.AdapterConfig = "{}"
+	} else if req.AdapterConfig != "{}" {
+		if !isValidJSON(req.AdapterConfig) {
+			jsonError(w, http.StatusBadRequest, "adapter_config must be valid JSON")
+			return
+		}
 	}
 	if req.ContextMode == "" {
 		req.ContextMode = "thin"
@@ -134,7 +147,7 @@ func CreateAgent(w http.ResponseWriter, r *http.Request) {
 
 func UpdateAgent(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
 	var req CreateAgentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -143,7 +156,7 @@ func UpdateAgent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.DB.Exec(`UPDATE agents SET name=?, role=?, adapter_type=?, adapter_config=?,
-		reports_to=?, capabilities=?, updated_at=datetime('now') WHERE id=?`,
+		reports_to=?, capabilities=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
 		req.Name, req.Role, req.AdapterType, req.AdapterConfig, req.ReportsTo, req.Capabilities, id)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "failed to update")
@@ -156,27 +169,27 @@ func UpdateAgent(w http.ResponseWriter, r *http.Request) {
 
 func DeleteAgent(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
-	db.DB.Exec("UPDATE agents SET status='terminated', updated_at=datetime('now') WHERE id=?", id)
+	db.DB.Exec("UPDATE agents SET status='terminated', updated_at=CURRENT_TIMESTAMP WHERE id=?", id)
 	logActivity("", boardID, "agent.deleted", "agent", id, nil)
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func PauseAgent(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
-	db.DB.Exec("UPDATE agents SET status='paused', updated_at=datetime('now') WHERE id=?", id)
+	db.DB.Exec("UPDATE agents SET status='paused', updated_at=CURRENT_TIMESTAMP WHERE id=?", id)
 	logActivity("", boardID, "agent.paused", "agent", id, nil)
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "paused"})
 }
 
 func ResumeAgent(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	boardID := r.Context().Value("user_id").(string)
+	boardID := getUserIDSafe(r)
 
-	db.DB.Exec("UPDATE agents SET status='active', updated_at=datetime('now') WHERE id=?", id)
+	db.DB.Exec("UPDATE agents SET status='active', updated_at=CURRENT_TIMESTAMP WHERE id=?", id)
 	logActivity("", boardID, "agent.resumed", "agent", id, nil)
 	jsonResponse(w, http.StatusOK, map[string]string{"status": "active"})
 }
