@@ -23,4 +23,4 @@ jobs:
         run: |
           cd apps/backend
           npx vercel link --project workagents-api --yes --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
-          npx vercel deploy --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+          npx vercel deploy --prod --token="$VERCEL_TOKEN"
