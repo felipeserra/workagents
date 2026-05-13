@@ -21,10 +21,16 @@ func rebind(query string) string {
 		return query
 	}
 	n := 0
-	return strings.ReplaceAll(query, "?", func() string {
-		n++
-		return fmt.Sprintf("$%d", n)
-	}())
+	var result strings.Builder
+	for i := 0; i < len(query); i++ {
+		if query[i] == '?' {
+			n++
+			result.WriteString(fmt.Sprintf("$%d", n))
+		} else {
+			result.WriteByte(query[i])
+		}
+	}
+	return result.String()
 }
 
 // Exec wraps sql.DB.Exec with automatic placeholder rebinding

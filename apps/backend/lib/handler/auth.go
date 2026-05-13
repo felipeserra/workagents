@@ -284,6 +284,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		id, req.Email, hash, req.Name,
 	)
 	if err != nil {
+		// Log the real error for debugging, return generic message to client
+		log.Printf("[auth] register error: %v", err)
 		jsonError(w, http.StatusConflict, "email already registered")
 		return
 	}
