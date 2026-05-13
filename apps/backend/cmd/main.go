@@ -1,148 +1,117 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
+
+	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+
+	"workagents/apps/backend/internal/db"
+	"workagents/apps/backend/internal/handler"
+	"workagents/apps/backend/internal/middleware"
 )
 
 func main() {
+	// Database
+	if err := db.Connect(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Migrate(); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// Router
+	r := chi.NewRouter()
+
+	// Middleware
+	r.Use(chimw.Logger)
+	r.Use(chimw.Recoverer)
+	r.Use(chimw.RequestID)
+	r.Use(chimw.RealIP)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Api-Key"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
+	// ── Public routes ──
+	r.Route("/api", func(r chi.Router) {
+		// Health
+		r.Get("/health", handler.Health)
+
+		// Auth (public)
+		r.Post("/auth/register", handler.Register)
+		r.Post("/auth/login", handler.Login)
+
+		// ── Protected routes (Board JWT) ──
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.JWTAuth)
+
+			// Companies
+			r.Get("/companies", handler.ListCompanies)
+			r.Post("/companies", handler.CreateCompany)
+			r.Get("/companies/{id}", handler.GetCompany)
+			r.Patch("/companies/{id}", handler.UpdateCompany)
+			r.Delete("/companies/{id}", handler.DeleteCompany)
+
+			// Agents
+			r.Get("/agents", handler.ListAgents)
+			r.Post("/agents", handler.CreateAgent)
+			r.Get("/agents/{id}", handler.GetAgent)
+			r.Patch("/agents/{id}", handler.UpdateAgent)
+			r.Delete("/agents/{id}", handler.DeleteAgent)
+			r.Post("/agents/{id}/pause", handler.PauseAgent)
+			r.Post("/agents/{id}/resume", handler.ResumeAgent)
+
+			// Tasks
+			r.Get("/tasks", handler.ListTasks)
+			r.Post("/tasks", handler.CreateTask)
+			r.Get("/tasks/{id}", handler.GetTask)
+			r.Patch("/tasks/{id}", handler.UpdateTask)
+			r.Post("/tasks/{id}/checkout", handler.CheckoutTask)
+			r.Post("/tasks/{id}/complete", handler.CompleteTask)
+			r.Post("/tasks/{id}/comment", handler.AddComment)
+
+			// Heartbeats
+			r.Post("/heartbeats", handler.TriggerHeartbeat)
+			r.Get("/heartbeats", handler.ListHeartbeats)
+			r.Get("/heartbeats/{id}/logs", handler.GetHeartbeatLogs)
+
+			// Budgets
+			r.Post("/budgets", handler.CreateBudget)
+			r.Get("/budgets", handler.ListBudgets)
+			r.Get("/budgets/usage", handler.GetBudgetUsage)
+			r.Patch("/budgets/{id}", handler.UpdateBudget)
+			r.Post("/budgets/{id}/override", handler.OverrideBudget)
+
+			// Activity
+			r.Get("/activity", handler.ListActivity)
+
+			// Approvals
+			r.Post("/approvals", handler.CreateApproval)
+			r.Get("/approvals", handler.ListApprovals)
+			r.Post("/approvals/{id}/approve", handler.ApproveApproval)
+			r.Post("/approvals/{id}/reject", handler.RejectApproval)
+		})
+	})
+
+	// Start
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	mux := http.NewServeMux()
-
-	// Health check
-	mux.HandleFunc("GET /api/health", handleHealth)
-
-	// Companies
-	mux.HandleFunc("GET /api/companies", handleListCompanies)
-	mux.HandleFunc("POST /api/companies", handleCreateCompany)
-	mux.HandleFunc("GET /api/companies/{id}", handleGetCompany)
-
-	// Agents
-	mux.HandleFunc("GET /api/agents", handleListAgents)
-	mux.HandleFunc("POST /api/agents", handleCreateAgent)
-	mux.HandleFunc("GET /api/agents/{id}", handleGetAgent)
-
-	// Tasks
-	mux.HandleFunc("GET /api/tasks", handleListTasks)
-	mux.HandleFunc("POST /api/tasks", handleCreateTask)
-
-	// Heartbeats
-	mux.HandleFunc("POST /api/heartbeats", handleTriggerHeartbeat)
-	mux.HandleFunc("GET /api/heartbeats", handleListHeartbeats)
-
-	// CORS middleware
-	handler := corsMiddleware(mux)
-
-	log.Printf("WorkAgents API starting on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, handler))
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-func jsonResponse(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-// ── Health ──
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusOK, map[string]string{"status": "ok"})
-}
-
-// ── Companies ──
-
-func handleListCompanies(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusOK, []map[string]any{
-		{"id": "1", "name": "My AI Company", "goal": "Build the future"},
-	})
-}
-
-func handleCreateCompany(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Name string `json:"name"`
-		Goal string `json:"goal"`
+	addr := fmt.Sprintf(":%s", port)
+	log.Printf("[server] WorkAgents API starting on %s", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		jsonResponse(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})
-		return
-	}
-	jsonResponse(w, http.StatusCreated, map[string]string{
-		"id":   "new-id",
-		"name": body.Name,
-		"goal": body.Goal,
-	})
-}
-
-func handleGetCompany(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	jsonResponse(w, http.StatusOK, map[string]string{"id": id, "name": "Company " + id})
-}
-
-// ── Agents ──
-
-func handleListAgents(w http.ResponseWriter, r *http.Request) {
-	companyID := r.URL.Query().Get("company_id")
-	_ = companyID
-	jsonResponse(w, http.StatusOK, []map[string]any{
-		{"id": "1", "name": "CEO Agent", "role": "CEO", "status": "active"},
-	})
-}
-
-func handleCreateAgent(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusCreated, map[string]string{"id": "new-agent", "status": "created"})
-}
-
-func handleGetAgent(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	jsonResponse(w, http.StatusOK, map[string]string{"id": id, "status": "active"})
-}
-
-// ── Tasks ──
-
-func handleListTasks(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusOK, []map[string]any{
-		{"id": "1", "title": "Build API", "status": "in_progress"},
-	})
-}
-
-func handleCreateTask(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusCreated, map[string]string{"id": "new-task", "status": "created"})
-}
-
-// ── Heartbeats ──
-
-func handleTriggerHeartbeat(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusAccepted, map[string]string{"status": "heartbeat_dispatched"})
-}
-
-func handleListHeartbeats(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusOK, []map[string]any{
-		{"id": "1", "agent_id": "1", "status": "completed"},
-	})
-}
-
-func init() {
-	ctx := context.Background()
-	_ = ctx
 }
