@@ -20,9 +20,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: prj_izG51izOTKLsvGuXJUT3vcf3wPV5
         run: |
           cd apps/backend
-          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
-          npx vercel build --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
-          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+          npx vercel link --project workagents-api --yes --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+          npx vercel deploy --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
