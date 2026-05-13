@@ -19,6 +19,8 @@ jobs:
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
           cd apps/backend
-          npx vercel deploy --yes --token="$VERCEL_TOKEN" --prod
+          npx vercel link --project workagents-api --yes --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+          npx vercel deploy --prod --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"

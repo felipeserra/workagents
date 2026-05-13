@@ -1,11 +1,11 @@
 {
+  "name": "workagents-api",
   "framework": null,
   "buildCommand": null,
   "installCommand": null,
   "functions": {
     "api/index.go": {
-      "maxDuration": 30,
-      "memory": 512
+      "maxDuration": 30
     }
   },
   "rewrites": [
